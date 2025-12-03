@@ -4,7 +4,54 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@{
+    ViewBag.Title = "Simulador Mini-ISA";
+}
+
+<link rel="stylesheet" href="~/css/simulador.css" />
+
+<div class="d-flex flex-column justify-content-center w-100 h-100">
+    <div class="d-flex flex-column justify-content-center align-items-center">
+        <h1 class="estilo">Simulador de Arquitetura</h1>
+
+        <label for="programa">Insira o programa em Assembly</label><br>
+
+        <textarea id="programa" rows="10" cols="50" placeholder="Exemplo:
+LI x1, 10
+LI x2, 20
+ADD x3, x1, x2
+SW x3, 0(x0)">
+        </textarea><br>
+
+        <button class="botao" onclick="ExecutarPrograma()">Executar</button>
+
+        <h2>Resultado da Simulação</h2>
+        <pre id="logExecucao"></pre>
+
+        <h2>Métricas</h2>
+        <div id="metricas"></div>
+    </div>
 </div>
+
+<script>function ExecutarPrograma() {
+        const programa = document.getElementById("programa").value;
+
+        fetch(`/Simulador/Executar`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ codigo: programa })
+        })
+        .then(r => r.json())
+        .then(data => {
+            // Exibe log ciclo-a-ciclo
+            document.getElementById("logExecucao").innerText = data.log;
+
+            // Exibe métricas
+            document.getElementById("metricas").innerHTML = `
+                <p>Ciclos totais: ${data.metricas.ciclos}</p>
+                <p>IPC: ${data.metricas.ipc}</p>
+                <p>Cache hits: ${data.metricas.hits}</p>
+                <p>Cache misses: ${data.metricas.misses}</p>
+            `;
+        });
+    }</script>
