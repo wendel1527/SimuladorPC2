@@ -1,0 +1,85 @@
+﻿O projeto busca aprofundar a compreensão da interface hardware/software. Para isso, você vai criar:
+Uma mini-ISA (um conjunto reduzido de instruções, inspirado no RISC-V RV32I).
+Um montador (assembler) que traduz assembly para binário/hex.
+Um emulador ciclo-a-ciclo que executa programas sobre essa ISA.
+Integração com subsistemas de E/S, interrupções, DMA e cache desenvolvidos nos projetos anteriores.
+Ou seja, é um simulador que imita o funcionamento de um processador simples, mas com suporte a memória cache e dispositivos de entrada/saída.
+ Componentes principais
+1. Mini-ISA
+Registros: x0 a x15.
+Instruções mínimas:
+ALU: ADD, SUB, AND, OR, XOR, SLT, ADDI
+Memória: LW, SW
+Controle: BEQ, BNE, JAL, JALR
+(Opcional) LUI, AUIPC para endereçamento mais flexível.
+ Isso define o "vocabulário" que o processador entende.
+2. Montador
+Traduz assembly em binário/hex para carregar na RAM do emulador.
+Suporta:
+Labels
+Imediatos decimais/hexadecimais
+Pseudo-op LI
+Diretivas (.org, .word)
+É a ponte entre o programador e o simulador.
+3. Emulador ciclo-a-ciclo
+Implementa o ciclo clássico: fetch → decode → execute.
+Possui:
+oPC (program counter)
+oBanco de registradores
+oIntegração com MMIO (dispositivos mapeados em memória).
+Suporta:
+Interrupções: vetor fixo, salvamento de contexto, ACK no PIC, retorno de IRQ.
+DMA: configurado via registros MMIO (SRC, DST, LEN, CTRL).
+Cache: todos os acessos de instruções e dados passam pela cache do Projeto 1.
+É o coração do simulador, imitando o funcionamento de um processador real.
+4. Métricas obrigatórias
+O simulador deve coletar estatísticas de desempenho:
+IPC (instruções por ciclo)
+Ciclos totais
+Latência de IRQ
+Tempo de cópia via DMA vs. memcpy por CPU
+Taxas de hit/miss da cache
+MPKI (misses por mil instruções)
+AMAT (tempo médio de acesso à memória)
+Ciclos de espera no barramento
+Isso transforma o simulador em uma ferramenta de análise de desempenho.
+5. Cenários de avaliação
+São programas de teste que validam o simulador:
+Echo (console): teclado gera IRQ → ISR lê dado e escreve de volta.
+Cópia DMA: programa configura DMA para copiar bloco de memória e mede tempo.
+Timer blink: IRQ periódica atualiza contador em memória.
+Esses benchmarks garantem que todos os subsistemas (E/S, cache, DMA, IRQ) funcionem corretamente.Em resumo
+O projeto é um simulador educacional de processador, que:
+Executa uma mini-ISA inspirada no RISC-V.
+Usa um montador para carregar programas.
+Emula ciclo-a-ciclo, com cache, DMA e interrupções.
+Permite medir desempenho e entender como hardware e software interagem.
+Entrada (o que o usuário fornece)
+Um conjunto de instruções em formato simples (texto ou lista).
+Pode ser escrito como se fosse assembly, mas não precisa ser traduzido de verdade.
+Exemplo de entrada simulada:
+LI x1, 10
+LI x2, 20
+ADD x3, x1, x2
+SW x3, 0(x0
+
+2. Processamento (o que o programa faz internamente)
+O programa percorre cada instrução como se fosse um ciclo de CPU.
+Para cada instrução, atualiza um estado interno:
+oRegistradores (valores armazenados).
+oMemória (endereços e dados).
+oPC (program counter).
+Não precisa implementar lógica real de hardware, apenas simular que “algo aconteceu”.
+3. Saída (o que o programa mostra)
+Um log da execução ciclo-a-ciclo.
+Estado dos registradores e memória após cada instrução.
+Métricas finais (simuladas ou calculadas de forma simples).
+Cycle 1: LI x1,10 | x1=10 x2=0 x3=0 Mem[0]=0
+Cycle 2: LI x2,20 | x1=10 x2=20 x3=0 Mem[0]=0
+Cycle 3: ADD x3,x1,x2 | x1=10 x2=20 x3=30 Mem[0]=0
+Cycle 4: SW x3,0(x0) | x1=10 x2=20 x3=30 Mem[0]=30
+
+Resumo:
+Total cycles = 4
+IPC ≈ 1.0
+Cache hits = 3, misses = 1 (simulado)
