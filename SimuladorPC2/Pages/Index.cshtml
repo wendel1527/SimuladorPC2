@@ -26,14 +26,34 @@ SW x3, 0(x0)">
         <button class="botao" onclick="ExecutarPrograma()">Executar</button>
 
         <h2>Resultado da Simulação</h2>
-        <pre id="logExecucao"></pre>
+        <div class="log-wrapper">
+            <table id="logExecucao" class="log-table">
+                <thead>
+                    <tr>
+                        <th class="log-cycle">Ciclo</th>
+                        <th class="log-instr">Instrução</th>
+                        <th>Detalhes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- linhas serão inseridas via JS -->
+                </tbody>
+            </table>
+        </div>
 
         <h2>Métricas</h2>
-        <div id="metricas"></div>
+        <div id="metricas" class="metrics-grid"></div>
     </div>
 </div>
 
-<script>function ExecutarPrograma() {
+<script>function escapeHtml(s){
+        return s
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function ExecutarPrograma() {
         const programa = document.getElementById("programa").value;
 
         fetch(`/Simulador/Executar`, {
@@ -43,15 +63,82 @@ SW x3, 0(x0)">
         })
         .then(r => r.json())
         .then(data => {
-            // Exibe log ciclo-a-ciclo
-            document.getElementById("logExecucao").innerText = data.log;
+            // Exibe métricas em grid
+            const container = document.getElementById("metricas");
+            container.innerHTML = '';
 
-            // Exibe métricas
-            document.getElementById("metricas").innerHTML = `
-                <p>Ciclos totais: ${data.metricas.ciclos}</p>
-                <p>IPC: ${data.metricas.ipc}</p>
-                <p>Cache hits: ${data.metricas.hits}</p>
-                <p>Cache misses: ${data.metricas.misses}</p>
-            `;
+            const metrics = [
+                { label: 'Ciclos totais', value: data.metricas.ciclos },
+                { label: 'IPC', value: data.metricas.ipc },
+                { label: 'Cache hits', value: data.metricas.hits },
+                { label: 'Cache misses', value: data.metricas.misses }
+            ];
+
+            metrics.forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'metric';
+                item.innerHTML = `<div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div>`;
+                container.appendChild(item);
+            });
+
+            // Exibe log ciclo-a-ciclo em grid (cada row por ciclo)
+            const tableBody = document.querySelector('#logExecucao tbody');
+            tableBody.innerHTML = '';
+
+            let rawLines = [];
+            if (Array.isArray(data.log)) rawLines = data.log.slice();
+            else if (typeof data.log === 'string') rawLines = data.log.split(/\r?\n/);
+
+            let currentRow = null;
+
+            rawLines.forEach(line => {
+                if (!line || !line.trim()) return; // pular vazios
+
+                const cycleMatch = line.match(/^\s*Cycle\s+(\d+)\s*:\s*(.*)$/i);
+                if (cycleMatch) {
+                    // nova linha/row para este ciclo
+                    const cycle = cycleMatch[1];
+                    const instr = cycleMatch[2] || '';
+                    currentRow = document.createElement('tr');
+
+                    const tdCycle = document.createElement('td');
+                    tdCycle.className = 'log-cycle';
+                    tdCycle.textContent = cycle;
+
+                    const tdInstr = document.createElement('td');
+                    tdInstr.className = 'log-instr';
+                    tdInstr.textContent = instr;
+
+                    const tdDetails = document.createElement('td');
+                    tdDetails.className = 'log-details';
+                    tdDetails.textContent = '';
+
+                    currentRow.appendChild(tdCycle);
+                    currentRow.appendChild(tdInstr);
+                    currentRow.appendChild(tdDetails);
+
+                    tableBody.appendChild(currentRow);
+                } else {
+                    // linha de detalhe (por exemplo " LI x1 = 10") -> adiciona ao último row
+                    if (!currentRow) return; // sem ciclo anterior, ignora
+                    const tdDetails = currentRow.querySelector('.log-details');
+                    // remover prefixos de espaço para exibir melhor
+                    const trimmed = line.replace(/^\s+/, '');
+                    // concatenar com quebra de linha preservada
+                    tdDetails.innerHTML = tdDetails.innerHTML
+                        ? tdDetails.innerHTML + '<br>' + escapeHtml(trimmed)
+                        : escapeHtml(trimmed);
+                }
+            });
+
+            // Se não houver linhas por ciclo, exibe mensagem
+            if (!tableBody.querySelector('tr')) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 3;
+                td.textContent = 'Nenhum log disponível.';
+                tr.appendChild(td);
+                tableBody.appendChild(tr);
+            }
         });
     }</script>

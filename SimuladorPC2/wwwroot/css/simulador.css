@@ -1,0 +1,73 @@
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.metric {
+    border: 1px solid rgba(0,0,0,0.1);
+    padding: 10px;
+    border-radius: 6px;
+    background: #f8f9fa;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.metric-value {
+    font-size: 1.25rem;
+    color: #0b5ed7;
+}
+
+/* Log table styles */
+.log-wrapper {
+    width: 100%;
+    max-height: 320px;
+    overflow: auto;
+    margin-top: 8px;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 6px;
+    background: #fff;
+}
+
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: monospace;
+    font-size: 0.95rem;
+}
+
+.log-table th,
+.log-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    text-align: left;
+    vertical-align: top;
+}
+
+.log-table th {
+    position: sticky;
+    top: 0;
+    background: #f1f3f5;
+    z-index: 2;
+}
+
+.log-cycle {
+    width: 80px;
+    font-weight: 700;
+}
+
+.log-instr {
+    width: 40%;
+    color: #333;
+}
+
+.log-details {
+    color: #444;
+    white-space: pre-wrap;
+}
